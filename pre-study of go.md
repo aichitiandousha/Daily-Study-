@@ -1,0 +1,603 @@
+2020/5/17
+
+
+
+## 变量
+
+ 声明变量的一般使用 var ：
+
+```go
+var name type
+```
+
+###### 变量声明
+
+1. 指定变量类型。如没有初始化赋值，则默认零值。
+2. 根据值由编译器自行判断类型
+3. 如变量已用var声明过，再使用 `:=`声明变量会报错，`no new variables on left side of`。
+
+
+
+###### 多变量声明示例：
+
+```go
+a, b, c := 5, 7, "abc"
+```
+
+```go
+var a, b int
+var c string
+a, b, c = 5, 7, "abc"
+```
+
+```go
+var a, b int = 5, 7
+var c string = "abc"
+```
+
+_注：_局部变量声明却未使用，则会编译错误  : **a declared but not used**
+
+​	   全局变量允许声明但是并不使用。
+
+
+
+空白标识符 _ 也被用于抛弃值
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+  _,numb,strs := numbers() //只获得函数numbers返回值的后两个，第一个被抛弃
+  fmt.Println(numb,strs)
+}
+
+//一个可以返回多个值的函数
+func numbers()(int,int,string){
+  a , b , c := 1 , 2 , "str"
+  return a,b,c
+}
+```
+
+```go
+2 str
+```
+
+###### 变量作用域
+
+* 函数内定义的变量称为局部变量，在函数体内声明的变量称之为局部变量，它们的作用域只在函数体内，**参数和返回值变量也是局部变量**。
+* 函数外定义的变量称为全局变量，**全局变量可以在整个包甚至外部包（被导出后）使用**。
+* 函数定义中的变量称为形式参数，形式参数会作为**函数的局部变量**来使用。
+
+
+
+
+
+## 常量
+
+常量（constant）中的数据类型只能为 布尔型（bool type），数字型（int，float，complex）和字符串型（string）；
+
+定义格式：
+
+```go
+const name [type] = value
+```
+
+可忽略类型说明符 [type]，因为可以根据变量判断类型。
+
+iota，特殊常量，const每增加一行常量声明iota便计数加一（iota为const的行数计数器）
+
+下面介绍一个实例
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    const (
+            a = iota   //0
+            b          //1
+            c          //2
+            d = "ha"   //独立值，iota += 1
+            e          //"ha"   iota += 1
+            f = 100    //iota +=1
+            g          //100  iota +=1
+            h = iota   //7
+            i          //8
+    )
+    fmt.Println(a,b,c,d,e,f,g,h,i)
+}
+
+```
+
+运行结果：
+
+```
+0 1 2 ha ha 100 100 7 8
+```
+
+
+
+```go
+package main
+
+import "fmt"
+
+const (
+    i = 1 << iota //i = 1 << 0 (i=1左移0位仍为1)(<<为二进制补码进行的左移操作)
+    j = 3 << iota //j = 3 << 1 (j=3左移1位，变为二进制110，即十进制6)
+    k			  //k = 3 << 2 (k=3左移2位，1100，即12)
+    l			  //l = 3 << 3 (l=3左移3位，11000，即24)
+)
+
+func main() {
+	fmt.Println("i=", i)
+	fmt.Println("j=", j)
+	fmt.Println("k=", k)
+	fmt.Println("l=", l)
+}
+```
+
+
+
+```go
+i= 1
+j= 6
+k= 12
+l= 24
+```
+
+_注_：**<<n** 可视为 ***(2^n)**
+
+| 算术运算符 | 描述                 |
+| :--------- | :------------------- |
+| &&         | 逻辑与运算符         |
+| \|\|       | 逻辑或运算符         |
+| ！         | 逻辑非运算符         |
+| &          | 位与运算符（二进制） |
+| \|         | 位或运算符           |
+| ^          | 位异或运算符         |
+| <<         | 左移运算符           |
+| >>         | 右移运算符           |
+
+
+
+| 其他运算符 | 描述           |
+| ---------- | -------------- |
+| &          | &a；变量的地址 |
+| *          | *a；指针变量   |
+
+
+
+| 优先级 | 算术运算符      |
+| ------ | --------------- |
+| 5      | * / % << >> &   |
+| 4      | + - \| ^        |
+| 3      | == != < <= > >= |
+| 2      | &&              |
+| 1      | \|\|            |
+
+
+
+## 函数
+
+定义格式：
+
+```go
+func name( [parameter list] ) [return_types] {
+   函数体
+}
+```
+
+func：函数由func开始声明
+
+name：函数名称
+
+parameter list：参数列表，指定参数类型，顺序，个数等。
+
+return_types：返回值类型，函数返回一列值。
+
+函数体：函数定义代码集合。
+
+##### 函数参数
+
+| 传递类型 | 描述                                                         |
+| :------- | :----------------------------------------------------------- |
+| 值传递   | 调用函数时将实际参数复制一份传递到函数中，在函数中对参数的修改，将不会影响实践参数。 |
+| 引用传递 | 调用函数时将实际参数的地址传递到函数中，那么在函数中对参数所进行的修改，将影响到实际参数。 |
+
+_默认使用值传递_
+
+| 函数用法               | 描述                                     |
+| ---------------------- | ---------------------------------------- |
+| 函数作为另一个函数实参 | 函数定义后可作为另外一个函数的实参数使用 |
+| 闭包                   | 闭包是匿名函数，可直接使用函数内变量     |
+| 方法                   | 一个包含了接受者的函数                   |
+
+> 一个方法就是一个包含了接受者的函数，接受者可以是命名类型或者结构体类型的一个值或者是一个指针。所有给定类型的方法属于该类型的方法集。语法格式如下：
+
+```go
+func (variable_name variable_data_type) function_name() [return_type]{
+   /* 函数体*/
+}
+```
+
+示例
+
+```go
+package main
+
+import (
+   "fmt"  
+)
+
+// 结构体 Circle
+type Circle struct {
+  radius float64
+}
+
+func main() {
+  var c1 Circle
+  c1.radius = 10.00
+  fmt.Println("圆的面积 = ", c1.getArea())
+}
+
+//该 method 属于 Circle 类型对象中的方法
+func (c Circle) getArea() float64 {
+  //c.radius 即为 Circle 类型对象中的属性
+  return 3.14 * c.radius * c.radius
+}
+```
+
+输出
+
+```go
+圆的面积 =  314
+```
+
+
+
+
+
+## 指针
+
+_变量是一种占位符，用于引用计算机内存地址。Go 语言的取地址符是 &，放到一个变量前使用就会返回相应变量的内存地址。_
+
+一个指针变量指向了一个值的内存地址。
+
+声明格式如下：
+
+```go
+var name *type
+```
+
+使用流程
+
+* 定义指针变量。
+* 为指针变量赋值。
+* 访问指针变量中指向地址的值。
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+   var a int= 20   // 声明实际变量 
+   var ip *int        // 声明指针变量 
+
+   ip = &a  // 指针变量的存储地址 
+
+   fmt.Printf("a 变量的地址是: %x\n", &a  )
+
+   // 指针变量的存储地址 
+   fmt.Printf("ip 变量储存的指针地址: %x\n", ip )
+
+   // 使用指针访问值 
+   fmt.Printf("*ip 变量的值: %d\n", *ip )
+}
+```
+
+输出：
+
+```go
+a 变量的地址是: 20818a220
+ip 变量储存的指针地址: 20818a220
+*ip 变量的值: 20
+```
+
+
+
+###### 指针数组声明
+
+```go
+var ptr [MAX]*int;
+```
+
+示例：
+
+```go
+package main
+
+import "fmt"
+
+const MAX int = 3
+
+func main() {
+   a := []int{10,100,200}
+   var i int
+   var ptr [MAX]*int;
+
+   for  i = 0; i < MAX; i++ {
+      ptr[i] = &a[i] /* 整数地址赋值给指针数组 */
+   }
+
+   for  i = 0; i < MAX; i++ {
+      fmt.Printf("a[%d] = %d\n", i,*ptr[i] )
+   }
+}
+```
+
+输出
+
+```go
+a[0] = 10
+a[1] = 100
+a[2] = 200
+```
+
+
+
+###### 指向指针的指针
+
+如一个指针变量存放的又是另一个指针变量的地址，则称这个指针变量为指向指针的指针变量。
+
+声明格式：
+
+```go
+var ptr **int;
+```
+
+示例：
+
+```go
+ppackage main
+import "fmt"
+
+func main(){
+  var a int = 1
+  var ptr1 *int = &a
+  var ptr2 **int = &ptr1
+  var ptr3 **(*int) = &ptr2 // 也可以写作：var ptr3 ***int = &ptr2
+  fmt.Println("a:", a)
+  fmt.Println("ptr1", ptr1) //输出实际内存地址
+  fmt.Println("ptr2", ptr2)
+  fmt.Println("ptr3", ptr3)
+  fmt.Println("*ptr1", *ptr1) //指针指向变量
+  fmt.Println("**ptr2", **ptr2) //二级指针
+  fmt.Println("**(*ptr3)", **(*ptr3)) // 三级指针，也可以写作：***ptr3
+}
+```
+
+输出
+
+```go
+a: 1
+ptr1 0xc000018088
+ptr2 0xc000006028
+ptr3 0xc000006030
+*ptr1 1
+**ptr2 1
+**(*ptr3) 1
+```
+
+
+
+## 结构体
+
+**结构体是由一系列具有相同类型或不同类型的数据构成的数据集合。**
+
+结构体格式：
+
+```go
+type struct_name struct {
+   member1 type
+   member2 type
+   ...
+   membern type
+}
+```
+
+变量声明
+
+```go
+variable_name := structure_name {value1, value2...valuen}
+variable_name := structure_name { key1: value1, ..., keyn: valuen}
+```
+
+访问结构体成员：
+
+```go
+structure_name.member
+```
+
+###### 结构体指针
+
+格式如下：
+
+```go
+var struct_pointer *Books
+struct_pointer = &Books
+
+struct_pointer.member
+```
+
+
+
+## 错误处理
+
+通过内置的错误接口提供错误处理机制
+
+error类型是一个接口类型，定义如下
+
+```go
+type error interface {
+    Error() string
+}
+```
+
+函数通常在最后的返回值中返回错误信息。使用errors.New 可返回一个错误信息
+
+```go
+func Sqrt(f float64) (float64, error) {
+    if f < 0 {
+        return 0, errors.New("math: square root of negative number")
+    }
+}
+```
+
+
+
+
+
+## 并发
+
+来开启 goroutine 可支持并发。goroutine 是轻量级线程，goroutine 的调度是由 Golang 运行时进行管理的。_同一个程序中的所有 goroutine 共享同一个地址空间_
+
+语法格式：
+
+```go
+go func_name( parameter list )
+```
+
+示例：
+
+```go
+package main
+
+import (
+        "fmt"
+        "time"
+)
+
+func say(s string) {
+        for i := 0; i < 5; i++ {
+                time.Sleep(100 * time.Millisecond)
+                fmt.Println(s)
+        }
+}
+
+func main() {
+        go say("world")
+        say("hello")
+}
+```
+
+输出：
+
+```go
+world
+hello
+hello
+world
+world
+hello
+hello
+world
+world
+hello
+```
+
+
+
+## 通道
+
+通道（channel）是用来传递数据的一个数据结构。
+
+通道可用于两个 goroutine 之间通过传递一个指定类型的值来同步运行和通讯。操作符 `<-` 用于指定通道的方向，发送或接收。如果未指定方向，则为双向通道。
+
+```go
+chan_name <- a    // 把 a 发送到通道 ch
+b := <-chan_name  // 从 ch 接收数据并把值赋给 b
+```
+
+创建通道：
+
+```go
+chan_name := make(chan int)
+```
+
+_注意_：默认情况下，通道是不带缓冲区。发送端发送数据，同时必须有接收端相应的接收数据。
+
+###### 通道缓冲区
+
+可以自行设置通道缓冲区：
+
+```go
+ch := make(chan int, 100)
+```
+
+发送端发送的数据可以放在缓冲区里面，可以等待接收端去获取数据，而不是立刻需要接收端去获取数据。
+
+###### Go 遍历通道与关闭通道
+
+Go 通过 `range `关键字来实现遍历读取到的数据，如果通道接收不到数据后会报 false，这时通道就可以使用 `close()` 函数来关闭。
+
+示例
+
+```go
+package main
+
+import (
+        "fmt"
+)
+
+func fibonacci(n int, c chan int) {
+        x, y := 0, 1
+        for i := 0; i < n; i++ {
+                c <- x
+                x, y = y, x+y
+        }
+        close(c)//如果 c 通道不关闭，那么 range 函数就不会结束，
+     			//从而在接收第 11 个数据的时候就阻塞了。
+}
+
+func main() {
+        c := make(chan int, 10)
+        go fibonacci(cap(c), c)
+        // range 函数遍历每个从通道接收到的数据，因为 c 在发送完 10 个
+        // 数据之后就关闭了通道，
+        // 所以这里我们 range 函数在接收到 10 个数据之后就结束了。
+        for i := range c {
+                fmt.Println(i)
+        }
+}
+```
+
+输出
+
+```go
+0
+1
+1
+2
+3
+5
+8
+13
+21
+34
+```
+
+
+
+
+
+今日计划
+
+翻阅golang相关书籍，对新知识进行学习，对其旧知识点复习总结，进行更多的代码实践操作。
+
+
+
